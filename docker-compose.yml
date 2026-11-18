@@ -24,6 +24,11 @@ services:
     environment:
       DATABASE_DSN: postgresql://fault_ro:fault_ro@db:5432/faultdb
       POOL_SIZE: "2"
+      # 分页会话闲置释放时限（默认即 30s，显式写出便于调整）。
+      PAGED_IDLE_TIMEOUT_MS: "30000"
+      # 仅供容器内自测（python -m tests.selftest）执行混沌/快照注入；
+      # 应用本身只使用上面的只读 DSN。
+      ADMIN_DSN: postgresql://fault_admin:fault_admin@db:5432/faultdb
     ports:
       - "8000:8000"
 

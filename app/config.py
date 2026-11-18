@@ -40,6 +40,12 @@ class Settings:
     statement_timeout_grace_ms: int = _int("STATEMENT_TIMEOUT_GRACE_MS", 1250)
     # Hard cap on the request body so an analyst cannot submit huge payloads.
     max_sql_chars: int = _int("MAX_SQL_CHARS", 10_000)
+    # Snapshot pagination: a session pins one pooled connection in an open
+    # REPEATABLE READ transaction.  It is released on the last page, on
+    # timeout/disconnect/failure, or after this much idle time.
+    paged_idle_timeout_ms: int = _int("PAGED_IDLE_TIMEOUT_MS", 30_000)
+    # How often the background reaper looks for idle paging sessions.
+    paged_reaper_interval_ms: int = _int("PAGED_REAPER_INTERVAL_MS", 1_000)
 
 
 settings = Settings()

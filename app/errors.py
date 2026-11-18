@@ -35,3 +35,17 @@ class QueryTimeout(QueryServiceError):
 
     code = "query_timeout"
     http_status = 504
+
+
+class SessionBusyError(QueryServiceError):
+    """A pagination session is already active; at most one is allowed."""
+
+    code = "session_busy"
+    http_status = 409
+
+
+class InvalidPageTokenError(QueryServiceError):
+    """The page token is unknown or its pagination session has ended."""
+
+    code = "invalid_page_token"
+    http_status = 410

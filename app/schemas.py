@@ -47,3 +47,65 @@ class ErrorResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: Literal["healthy"]
     pool: dict[str, Any]
+    pagination: dict[str, Any] | None = None
+
+
+class PagedOpenRequest(BaseModel):
+    """Open a snapshot pagination session and fetch its first page."""
+
+    sql: str = Field(
+        ...,
+        description=(
+            "单条只读 SELECT 语句；会话期间所有页都来自开启时的同一数据库快照"
+        ),
+        examples=["SELECT id, device_id, severity, occurred_at FROM fault_logs ORDER BY id"],
+    )
+    page_size: int = Field(
+        ...,
+        ge=1,
+        le=1000,
+        description="每页行数（服务端游标逐页 FETCH，不会一次加载全部结果）",
+    )
+    timeout_ms: int = Field(
+        ...,
+        ge=1,
+        le=60_000,
+        description="本次请求总截止时间（毫秒），排队等连接的时间计入预算",
+    )
+
+
+class PagedNextRequest(BaseModel):
+    page_token: str = Field(
+        ...,
+        min_length=8,
+        max_length=128,
+        description="上一页响应返回的取页令牌；会话结束时令牌失效",
+    )
+    timeout_ms: int = Field(
+        ...,
+        ge=1,
+        le=60_000,
+        description="本次取页的总截止时间（毫秒），排队时间计入预算",
+    )
+
+
+class PagedCloseRequest(BaseModel):
+    page_token: str = Field(..., min_length=8, max_length=128)
+
+
+class PagedPageResponse(BaseModel):
+    status: Literal["ok"]
+    has_more: bool = Field(description="是否还有后续页；末页时会话随即关闭")
+    page_token: str | None = Field(
+        default=None, description="取下一页所需的令牌；末页时为 null"
+    )
+    row_count: int
+    rows: list[list[Any]]
+    wait_ms: float = Field(description="本次请求排队耗时（计入总期限）")
+    execution_ms: float
+    page_number: int
+
+
+class PagedCloseResponse(BaseModel):
+    status: Literal["closed"]
+    detail: str | None = None
